@@ -46,7 +46,7 @@ app.use('/graphql', graphqlHttp({
         events: () => {
             return Event.find().then(events => {
                 return events.map(event => {
-                    return { ...event._doc }
+                    return { ...event._doc, _id: event._doc._id.toString() }
                 })
             }).catch(err => console.log(err))
         },
@@ -59,7 +59,7 @@ app.use('/graphql', graphqlHttp({
             })
             return event.save().then(result => {
                 console.log(result)
-                return {...result._doc}
+                return {...result._doc, _id: event._doc._id.toString()}
             }).catch(err => {
                 console.log(err)
                 throw err
