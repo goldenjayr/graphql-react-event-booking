@@ -25,7 +25,19 @@ const user = async userId => {
     catch (err) {
         throw err
     }
+}
 
+const singleEvent = async eventId => {
+    try {
+        const event = await Event.findById(eventId)
+        return {
+            ...event._doc,
+            _id: event.id,
+            creator: user.bind(this, event.creator)
+        }
+    } catch (err) {
+        throw err
+    }
 }
 
 module.exports = {
@@ -63,6 +75,8 @@ module.exports = {
                     return {
                         ...booking._doc,
                         _id: booking.id,
+                        user: user.bind(this, booking._doc.user),
+                        event: singleEvent.bind(this, booking._doc.event),
                         createdAt: new Date(booking.createdAt).toISOString(),
                         updatedAt: new Date(booking.updatedAt).toISOString()
                     }
@@ -122,7 +136,6 @@ module.exports = {
     bookEvent: async ({eventId}) => {
         try {
             const fetchedEvent = await Event.findOne({ _id: eventId })
-            console.log("TCL: fetchedEvent", fetchedEvent.id)
             const booking = new Booking({
                 user: '5ddcca3ca049b05711b7a7e6',
                 event: fetchedEvent.id
@@ -131,9 +144,25 @@ module.exports = {
             return {
                 ...result._doc,
                 _id: result.id,
+                user: user.bind(this, booking._doc.user),
+                event: singleEvent.bind(this, booking._doc.event),
                 createdAt: new Date(result.createdAt).toISOString(),
                 updatedAt: new Date(result.updatedAt).toISOString()
             }
+        } catch (err) {
+            throw err
+        }
+    },
+    cancelBooking: async ({bookingId}) => {
+        try {
+            const booking = await Booking.findById(bookingId).populate('event')
+            const event = {
+                ...booking.event._doc,
+                _id: booking.event.id,
+                creator: user.bind(this, booking.creator)
+            }
+           await Booking.deleteOne({ _id: bookingId })
+            return event
         } catch (err) {
             throw err
         }
